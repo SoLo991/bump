@@ -1,16 +1,24 @@
 require('dotenv').config();
 const { Client } = require('discord.js-selfbot-v13');
 const client = new Client();
+const http = require('http');
 
-const mySecret = process.env['TOKEN']
-const mySecret2 = process.env['BUMP_CHANNEL']
+// Keep-alive server
+const server = http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('Bot is alive!');
+});
+
+// Set the port (use environment variable or default to 8080)
+const port = process.env.PORT || 8080;
+server.listen(port, () => {
+  console.log(`Keep-alive server running on port ${port}`);
+});
 
 client.on('ready', async () => {
     console.log(`Logged in as ${client.user.tag}!`);
-
     try {
         const channel = await client.channels.fetch(process.env.BUMP_CHANNEL);
-
         async function bump() {
             try {
                 await channel.sendSlash('302050872383242240', 'bump');
@@ -22,14 +30,11 @@ client.on('ready', async () => {
                 return false;
             }
         }
-
         async function loop() {
             while (true) {
                 // Random time between 2 hours and 2.5 hours (in milliseconds)
                 const randomNum = Math.round(Math.random() * (9000000 - 7200000 + 1)) + 7200000;
-
                 const success = await bump();
-
                 if (success) {
                     console.log(`Waiting for ${(randomNum / 1000 / 60).toFixed(2)} minutes before the next bump...`);
                     await new Promise(resolve => setTimeout(resolve, randomNum));
@@ -40,10 +45,8 @@ client.on('ready', async () => {
                 }
             }
         }
-
         // Start the bumping process
         loop();
-
     } catch (error) {
         console.error('Error initializing bumper:', error);
     }
